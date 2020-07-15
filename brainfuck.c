@@ -16,13 +16,13 @@ int interpretBetween(char **ptr, const char *startAddress, int loopLevel, char c
         else if (c == '>') { 
             ++*ptr; 
             if (*ptr > startAddress+MEMORY_SIZE) {
-                fprintf(stderr, "Memory out of bounds");
+                fprintf(stderr, "Memory out of bounds.\n");
                 return 1;
             }            
         }
         else if (c == '<') {
             if (*ptr == startAddress) {
-                fprintf(stderr, "Memory out of bounds");
+                fprintf(stderr, "Memory out of bounds.\n");
                 return 1;
             }
             else {
@@ -55,8 +55,17 @@ int main(int argc, char const *argv[])
     char memory[MEMORY_SIZE] = {0};
     char* ptr = memory;
 
+    if (argc < 2) {
+        fprintf(stderr, "You forgot to say what file you would like to interpret.\n");
+        return 1;
+    }
+
     // Create array to contain instructions
     FILE* file = fopen(argv[1], "r");
+    if (file == NULL) {
+        fprintf(stderr, "An error occured while trying to open the file '%s'.\n", argv[1]);
+        return 1;
+    }
     fseek(file, 0L, SEEK_END);
     int size = ftell(file);
     char code[size];
