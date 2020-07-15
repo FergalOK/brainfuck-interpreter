@@ -1,8 +1,9 @@
 #include <stdio.h>
 
 #define MAX_NESTED_LOOPS 10
+#define MEMORY_SIZE 30000
 
-void interpretBetween(char **ptr, int loopLevel, char code[], int start, int end) 
+int interpretBetween(char **ptr, const char *startAddress, int loopLevel, char code[], int start, int end) 
 {
     char c;
     int loopStarts[MAX_NESTED_LOOPS] = {0};
@@ -12,8 +13,22 @@ void interpretBetween(char **ptr, int loopLevel, char code[], int start, int end
         // Interpret each possible instruction 
         if      (c == '+') ++**ptr;
         else if (c == '-') --**ptr;
-        else if (c == '>') ++*ptr;
-        else if (c == '<') --*ptr;
+        else if (c == '>') { 
+            ++*ptr; 
+            if (*ptr > startAddress+MEMORY_SIZE) {
+                fprintf(stderr, "Memory out of bounds");
+                return 1;
+            }            
+        }
+        else if (c == '<') {
+            if (*ptr == startAddress) {
+                fprintf(stderr, "Memory out of bounds");
+                return 1;
+            }
+            else {
+                --*ptr;
+            }
+        }
         else if (c == '.') putchar(**ptr);
         else if (c == ',') **ptr = getchar();
         else if (c == '[') {
@@ -25,17 +40,19 @@ void interpretBetween(char **ptr, int loopLevel, char code[], int start, int end
         }
         else if (c == ']') {
             while (**ptr) {
-                interpretBetween(ptr, loopLevel, code, loopStarts[loopLevel-1], i-1);
+                interpretBetween(ptr, startAddress, loopLevel, code, loopStarts[loopLevel-1], i-1);
             }
             loopLevel--;
         }
     }
+
+    return 0;
 }
 
 int main(int argc, char const *argv[])
 {
     // Initialise memory
-    char memory[30000] = {0};
+    char memory[MEMORY_SIZE] = {0};
     char* ptr = memory;
 
     // Create array to contain instructions
@@ -54,8 +71,6 @@ int main(int argc, char const *argv[])
     fclose(file);
     
     // Interpret all code
-    interpretBetween(&ptr, 0, code, 0, size-1);
-
-    return 0;
+    return interpretBetween(&ptr, ptr, 0, code, 0, size-1);
 }
 
